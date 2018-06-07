@@ -47,7 +47,7 @@
       a、只能在after和before类型中使用标识符。
       b、语句级触发器不能使用。
       c、注意有“：”符号。
-      d、when条件中使用标识符时不加“：”。
+      d、when条件中使用标识符或在REFERENCING子句中为old和new起的别名中不加“：”。
       e、在before中只能修改“：new”，不能修改“：old”；在after中不能修改“：new”。
       触发时机AFTER后， :new的值已经被插入到表里， 因此:new不能修改；触发时机BEFORE后， :new的值还没有被插入到表里， 因此:new可以修改，而此时， :old值是表中没有被修改的值，因此不能被修改。
 
