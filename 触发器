@@ -41,6 +41,7 @@
    [FOR EACH ROW]
    trigger_body
    其中：
+   reference语句用于给new和old起别名。
    trigger_condition 为指定的限制条件，以确定触发器体是否被执行。满足此限制条件，触发器体被执行，否则触发器体不执行。在语句级触发器中不要使用when语句。
   5、行级触发器
    （1）访问行级触发器内部正在处理的数据：两个相关标识符：old和：new。
@@ -50,6 +51,110 @@
       d、when条件中使用标识符或在REFERENCING子句中为old和new起的别名中不加“：”。
       e、在before中只能修改“：new”，不能修改“：old”；在after中不能修改“：new”。
       触发时机AFTER后， :new的值已经被插入到表里， 因此:new不能修改；触发时机BEFORE后， :new的值还没有被插入到表里， 因此:new可以修改，而此时， :old值是表中没有被修改的值，因此不能被修改。
+  6、DML触发器的管理
+   使用ALTER TRIGGER 触发器名 命令打开和关闭触发器。
+   ALTER TRIGGER 触发器名 {DISABLE | ENABLE}
+   其中：
+   DISABLE 是关闭触发器
+   ENABLE是打开触发器
+  7、在DML触发器中进行的数据操作
+   （1）可以修改没有关联的表的数据，对与触发器没有关联的表的修改没有限制。
+     触发时机：在DML触发器中，根据其触发时间不同，触发时机可分为：BEFORE和AFTER，因此触发器可分为两类：BEFORE触发器和AFTER触发器。但它们在触发过程中各自执行的顺序不同。一般执行的顺序是BEFORE触发器，约束，表的DML操作和AFTER触发器。 
+   （2）修改被触发表的不同列的数据。
+   （3）修改被触发表的同一列的数据。
+   （4）修改有约束关系的关联表中的非主键列。
+   （5）可以读取一个没有变化的表的数据。
+   （6）不允许从一个变化的表和被触发的表中读取数据。
+      a、变化表是指直接或间接地受触发时间影响的表
+      b、与触发器发生连接的表本身是一个变化表
+      c、通过DELETE CASCADE完整性约束与被触发表产生联系的表是变化表
+  三、数据库事件触发器
+    数据库事件触发器是指用于特定数据库和数据定义事件的触发器。
+    Oracle支持启动数据库、关闭数据库、登录数据库、退出数据库、发生服务器错误、创建对象、修改对象、删除对象等事件。
+    事件触发器可定义为数据库级或模式级。
+    创建数据库级的触发器，用户必须具有ADMINISTRATOR DATABASE TRIGGER的系统权限。
+    1、定义数据库事件或模式事件触发器的语法
+     用于创建数据库事件或模式事件的触发器的语法与DML触发器的语法差别很小。
+     CREATE [OR REPLACE ] TRIGGER [schema.]触发器名
+     {BEFORE|AFTER}
+     {DDL事件1 [DDL事件2…]|数据库事件1  [数据库事件2…]}
+     ON {DATABASE|[schema.]SCHEMA}
+     [WHEN <条件>]
+     DECLARE
+     定义变量、游标、记录等
+     BEGIN
+     PL/SQL代码
+     END
+     其中：
+     Schema 是触发器或其他对象的拥有者
+     DDL事件是CREATE、ALTER、DROP
+     条件是一个给触发器执行规定的可选条件，可以在条件中使用事件属性
+ 四、DDL事件触发器
+   可以编写当用户创建或修改对象时触发的触发器。
+   1、触发器的限制
+    （1）CREATE TRIGGER语句文本的字符长度不能超过32KB；或者，如果触发器的逻辑编码超过60行，则最好将主要代码保存到存储过程里。使用时只需从触发器中调用存储过程即可。
+    （2）不要创建递归式触发器，否则，系统会因触发器与表之间的循环操作而导致内存用尽，系统崩溃。
+    （3）触发器体内的SELECT语句只能为SELECT … INTO …结构，或者为定义游标所使用的SELECT语句。
+    （4）触发器中不能使用数据库事务控制语句 COMMIT，ROLLBACK，SVAEPOINT语句。
+    （5）由触发器所调用的过程或函数也不能使用数据库事务控制语句；
+    （6）不能在触发体内使用DDL语句；
+    （7）触发器中不能声明LONG, LONG RAW 类型变量，也不能在触发表的LONG或LONG RAW列上使用:new和:old；
+    （8）触发器内可以读取LOB类型的列值，但不能通过:NEW修改LOB列中的数据。
+    （9）触发器的状态：无效状态(DISABLE)与有效状态(ENABLE)。
+五、INSTEAD OF触发器
+  对那些由于基本表包括连接而不能直接通过 INSERT、  UPDATE 和 DELETE 语句修改的视图提供了明晰的修改方法 。
+  可以将它置于“对象视图”中以插入、更新或删除基本关系表中的数据 。
+  1、INTEAD OF 触发器可用来操纵对视图的插入、修改和删除。当一个视图是根据几个表创建的时候， INTEAD OF 触发器是非常有用的。
+  2、与D M L触发器不同， D M L触发器是在D M L操作之外运行的，而替代触发器则代替激发它的D M L语句运行。替代触发器是行一级的。
+  3、创建替代触发器的语法
+    CREATE [OR REPLACE ] TRIGGER [schema.]触发器名
+    INSTEAD OF 触发事件1 [OR 触发事件2…] ON [schema.]视图名 [[REFERENCING correlatetion_names] FOR EACH ROW  [WHEN<条件>] ]
+    DECLARE 
+    定义变量、游标、记录结构等
+    BEGINE
+    PL/SQL 代码
+    END；
+    其中：
+    schema.——表示触发器或视图的创建者
+    correlatetion_names——允许用户指定默认的OLD和NEW之外的标识符
+    DECLARE … …END——可以随意用一个类似下面的CALL语句替代这个PL/SQL块。CALL语句使得触发器只包含一个对存储过程的调用。
+    语法：
+    CALL 过程名
+六、启用/禁用/删除触发器
+  禁用特定触发器 
+  ALTER TRIGGER <触发器名> DISABLE;
+  禁用特定表的所有触发器 
+  ALTER TABLE <表名> DISABLE ALL TRIGGERS;
+  启用特定触发器 
+  ALTER TRIGGER <触发器名> ENABLE;
+  启用特定表的所有触发器 
+  ALTER TABLE <表名> ENABLE ALL TRIGGERS;
+  使用 DROP 命令删除触发器 
+  DROP TRIGGER <触发器名>;
+七、触发器编译
+  1、触发器编译涉及三个阶段 ：语法检查、语义检查、代码生成。
+  2、如果在编译期间出错，仍然会创建触发器，但是执行它的所有指令都将失败 。
+  3、重新手动编译触发器
+    可以使用 ALTER TRIGGER 命令 
+    ALTER TRIGGER <triggername> COMPILE;
+    SHOW ERRORS 命令可以用于查看编译错误 
+    SHOW ERRORS TRIGGER <触发器名>;
+
+
+
+
+
+
+    
+
+
+
+
+
+
+   
+
+
 
 
 
